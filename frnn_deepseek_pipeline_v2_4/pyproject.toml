@@ -1,0 +1,21 @@
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frnn-path-b-deepseek"
+version = "0.2.4"
+description = "FRNN Path B — hardened PyTorch core with EMA bank and DeepSeek temporal context bridge."
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Aetheron Research"}]
+dependencies = [
+    "torch>=2.1",
+    "numpy>=1.23",
+    "requests>=2.31",
+    "pytest>=7.4"
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
