@@ -38,6 +38,8 @@ def tick(inp: TickIn):
 
 @app.post("/chat")
 def chat(inp: ChatIn):
+    if not inp.messages:
+        raise HTTPException(status_code=400, detail="messages list cannot be empty")
     x_t = build_x_t(inp.messages[-1]["content"], {"latency_ms":0,"tokens_last":0}, di=DEFAULT_CFG["Di"])
     ctx_vec, top_modes = core.tick(x_t)
     prefix = context_prefix(ctx_vec, top_modes)
