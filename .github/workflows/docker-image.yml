@@ -18,8 +18,8 @@ jobs:
           echo "IMAGE_ID=$IMAGE_ID" >> $GITHUB_ENV
           docker build . --file Dockerfile --tag "$IMAGE_ID"
 
-  push:
-    if: github.event_name == 'push'
+              username: ${{ github.actor }}
+              password: ${{ secrets.GHCR_TOKEN }}
     needs: build
       run: |
         REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
