@@ -17,8 +17,8 @@ jobs:
           IMAGE_ID=ghcr.io/$REPO_LC:$(date +%s)
           echo "IMAGE_ID=$IMAGE_ID" >> $GITHUB_ENV
           docker build . --file Dockerfile --tag "$IMAGE_ID"
-
-              username: ${{ github.actor }}
+              registry: ghcr.io
+              username: ${{ github.repository_owner }}
               password: ${{ secrets.GHCR_TOKEN }}
     needs: build
       run: |
