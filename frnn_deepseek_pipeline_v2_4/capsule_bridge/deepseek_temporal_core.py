@@ -40,7 +40,7 @@ def _parse(js:Dict)->str:
 
 def deepseek_chat(msgs:List[Dict],context_prefix_str:str,model=None,api_key=None,api_url=None,
                   temperature=0.2,top_p=0.9,timeout_s=None,max_retries=3,extra=None)->str:
-    api_key=api_key or os.getenv("DEEPSEEK_API_KEY",""); 
+    api_key=api_key or os.getenv("DEEPSEEK_API_KEY","");
     if not api_key: raise RuntimeError("DEEPSEEK_API_KEY not set")
     url=api_url or DEFAULT_URL; model=model or DEFAULT_MODEL; timeout_s=timeout_s or DEFAULT_TIMEOUT
     messages=[{"role":"system","content":context_prefix_str}]+msgs
