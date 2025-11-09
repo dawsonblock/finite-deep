@@ -26,6 +26,31 @@ def _startup():
     frnn = build_model(DEFAULT_CFG)
     core = TemporalCore(frnn)
 
+def _ensure_core():
+    if core is None:
+        raise HTTPException(status_code=503, detail="Model not initialized")
+
+@app.post("/tick")
+def tick(inp: TickIn):
+    _ensure_core()
+    x_t = build_x_t(inp.text, inp.meta, di=DEFAULT_CFG["Di"])
+    ctx_vec, top_modes = core.tick(x_t)
+    return {"ok": True, "top_modes": top_modes, "ctx_len": int(ctx_vec.numel())}
+
+@app.post("/chat")
+def chat(inp: ChatIn):
+    _ensure_core()
+    if not inp.messages:
+        raise HTTPException(status_code=400, detail="messages list cannot be empty")
+    x_t = build_x_t(inp.messages[-1]["content"], {"latency_ms":0,"tokens_last":0}, di=DEFAULT_CFG["Di"])
+    ctx_vec, top_modes = core.tick(x_t)
+    prefix = context_prefix(ctx_vec, top_modes)
+    try:
+        out = deepseek_chat(inp.messages, context_prefix_str=prefix, extra=inp.extra)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"reply": out, "modes": top_modes}
+
 @app.get("/healthz")
 def healthz():
     return {
