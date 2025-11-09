@@ -28,7 +28,12 @@ def _startup():
 
 @app.get("/healthz")
 def healthz():
-    return {"ok": True, "model": "ConfigB", "K": DEFAULT_CFG["K"], "bank": DEFAULT_CFG["bank"]}
+    return {
+        "ok": True,
+        "model": "ConfigB",
+        "K": DEFAULT_CFG.get("K", None),
+        "bank": DEFAULT_CFG.get("bank", None),
+    }
 
 @app.post("/tick")
 def tick(inp: TickIn):
