@@ -12,7 +12,7 @@ def save_state(core, path="frnn_state.pt"):
 
 def load_state(core, path="frnn_state.pt"):
     if not os.path.exists(path): return False
-    s=torch.load(path,map_location="cpu")
+    s=torch.load(path, map_location="cpu")
     core.frnn.M.data.copy_(s["M"])
     core.frnn.bank_keys.copy_(s["bank_keys"])
     core.frnn.bank_vals.copy_(s["bank_vals"])
