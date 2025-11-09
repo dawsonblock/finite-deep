@@ -62,8 +62,9 @@ class FRNNPathB(nn.Module):
             log=self.Wms(h)
             m=self._select_mode(log,prev_mode)
             mem=m@self.M
-            # Always update the bank to preserve temporal context across ticks
-            self._bank_push(mem,h)
+            # Only update bank during training to preserve eval determinism
+            if self.training:
+                self._bank_push(mem, h)
             bank=self._bank_read(mem)
             y=self.Wrd(self.read_norm(mem+bank))
             outs.append(y);modes.append(m);prev_mode=m
