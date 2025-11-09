@@ -7,6 +7,33 @@ on:
     branches: [ "main" ]
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the Docker image
+        run: |
+          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_ID=ghcr.io/$REPO_LC:$(date +%s)
+          echo "IMAGE_ID=$IMAGE_ID" >> $GITHUB_ENV
+          docker build . --file Dockerfile --tag "$IMAGE_ID"
+
+  push:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+      - name: Push the Docker image
+        run: docker push "$IMAGE_ID"
+
+jobs:
 
   build:
 
