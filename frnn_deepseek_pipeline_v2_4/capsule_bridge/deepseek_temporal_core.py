@@ -44,8 +44,19 @@ def context_prefix(vec:torch.Tensor,modes:List[int])->str:
     payload={"frnn_do":b.tolist(),"frnn_modes_top5":modes}
     return "[FRNN-CONTEXT]"+base64.b64encode(json.dumps(payload).encode()).decode()
 
-def _parse(js:Dict)->str:
-    ch=(js.get("choices") or [{}])[0];m=ch.get("message",{});return m.get("content") or ch.get("text","")
+def _parse(js: Dict) -> str:
+    try:
+        choices = js.get("choices")
+        if not isinstance(choices, list) or len(choices) == 0:
+            raise ValueError("Missing or empty 'choices' in response")
+        ch = choices[0] or {}
+        msg = ch.get("message") or {}
+        content = msg.get("content") or ch.get("text")
+        if not isinstance(content, str) or not content:
+            raise ValueError("Missing 'content' in response choice")
+        return content
+    except Exception as e:
+        raise RuntimeError(f"Invalid DeepSeek response format: {e}; raw={js!r}")
 
 def deepseek_chat(msgs:List[Dict],context_prefix_str:str,model=None,api_key=None,api_url=None,
                   temperature=0.2,top_p=0.9,timeout_s=None,max_retries=3,extra=None)->str:
