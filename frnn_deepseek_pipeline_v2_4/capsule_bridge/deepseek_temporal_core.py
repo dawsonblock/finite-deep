@@ -51,28 +51,30 @@ def _parse(js: Dict) -> str:
             raise ValueError("Missing or empty 'choices' in response")
         ch = choices[0] or {}
         msg = ch.get("message") or {}
-        content = msg.get("content") or ch.get("text")
-        if not isinstance(content, str) or not content:
-            raise ValueError("Missing 'content' in response choice")
-        return content
-    except Exception as e:
-        raise RuntimeError(f"Invalid DeepSeek response format: {e}; raw={js!r}")
-
-def deepseek_chat(msgs:List[Dict],context_prefix_str:str,model=None,api_key=None,api_url=None,
-                  temperature=0.2,top_p=0.9,timeout_s=None,max_retries=3,extra=None)->str:
-    api_key=api_key or os.getenv("DEEPSEEK_API_KEY","")
-    if not api_key:
-        raise RuntimeError("DEEPSEEK_API_KEY not set")
-    # Validate messages structure early
-    if not isinstance(msgs, list) or len(msgs) == 0:
-        raise ValueError("msgs must be a non-empty list")
-    for m in msgs:
-        if not isinstance(m, dict) or "role" not in m or "content" not in m:
-            raise ValueError("each message must be a dict with 'role' and 'content'")
-        if not isinstance(m["role"], str) or not isinstance(m["content"], str):
-            raise ValueError("'role' and 'content' must be strings")
-    url = api_url or DEFAULT_URL
-    model = model or DEFAULT_MODEL
+                raise RuntimeError("DEEPSEEK_API_KEY not set")
+            if not isinstance(msgs, list) or len(msgs) == 0:
+                raise ValueError("msgs must be a non-empty list")
+            for m in msgs:
+                if not isinstance(m, dict) or "role" not in m or "content" not in m:
+                    raise ValueError("each message must be a dict with 'role' and 'content'")
+                if not isinstance(m["role"], str) or not isinstance(m["content"], str):
+                    raise ValueError("'role' and 'content' must be strings")
+            url = api_url or DEFAULT_URL
+            model = model or DEFAULT_MODEL
+            # clamp timeout to a positive float
+            ts = DEFAULT_TIMEOUT if timeout_s is None else float(timeout_s)
+            if ts <= 0:
+                ts = DEFAULT_TIMEOUT
+            messages=[{"role":"system","content":context_prefix_str}]+msgs
+            head={"Authorization":f"Bearer {api_key}","Content-Type":"application/json"}
+            body={"model":model,"messages":messages,"temperature":float(temperature),"top_p":float(top_p),"stream":False}
+            if extra:
+                body.update(extra)
+            err=None
+            for i in range(max_retries):
+                try:
+                    r=requests.post(url,headers=head,json=body,timeout=ts)
+                    if r.status_code in (429,500,502,503,504):
     timeout_s = timeout_s or DEFAULT_TIMEOUT
     messages=[{"role":"system","content":context_prefix_str}]+msgs
     head={"Authorization":f"Bearer {api_key}","Content-Type":"application/json"}
