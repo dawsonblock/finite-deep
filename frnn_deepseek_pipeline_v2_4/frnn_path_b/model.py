@@ -1,7 +1,7 @@
 
 import torch
 import torch.nn as nn, torch.nn.functional as F
-from typing import Optional, Tuple
+from typing import Tuple
 
 class RMSNorm(nn.Module):
     def __init__(self, d, eps=1e-6):
