@@ -54,12 +54,16 @@ class FRNNPathB(nn.Module):
         B,S,_=x.shape;device=x.device
         if prev_mode is None:
             prev_mode=torch.zeros(B,self.K,device=device);prev_mode[:,0]=1.0
-        else: prev_mode=prev_mode.detach()
+        else:
+            prev_mode=prev_mode.detach()
         outs=[];modes=[]
         for t in range(S):
-            h=F.relu(self.Wtr(x[:,t,:]));log=self.Wms(h)
-            m=self._select_mode(log,prev_mode);mem=m@self.M
-            if self.training:self._bank_push(mem,h)
+            h=F.relu(self.Wtr(x[:,t,:]))
+            log=self.Wms(h)
+            m=self._select_mode(log,prev_mode)
+            mem=m@self.M
+            # Always update the bank to preserve temporal context across ticks
+            self._bank_push(mem,h)
             bank=self._bank_read(mem)
             y=self.Wrd(self.read_norm(mem+bank))
             outs.append(y);modes.append(m);prev_mode=m
