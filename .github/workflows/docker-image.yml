@@ -26,12 +26,23 @@ jobs:
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}:$(date +%s)
           echo "IMAGE_ID=$IMAGE_ID" >> $GITHUB_ENV
-          docker build . --file Dockerfile --tag "$IMAGE_ID"
-      - name: Push the Docker image
-        run: docker push "$IMAGE_ID"
-
-jobs:
-
+            run: |
+              IMAGE_ID_BASE=ghcr.io/${{ github.repository }}
+              TAG_SHA=${{ github.sha }}
+              TAG_TS=$(date +%s)
+              echo "IMAGE_ID_SHA=$IMAGE_ID_BASE:$TAG_SHA" >> $GITHUB_ENV
+              echo "IMAGE_ID_TS=$IMAGE_ID_BASE:$TAG_TS" >> $GITHUB_ENV
+              if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+                echo "IMAGE_ID_LATEST=$IMAGE_ID_BASE:latest" >> $GITHUB_ENV
+              fi
+              docker build . --file Dockerfile --tag "$IMAGE_ID_BASE:$TAG_SHA" --tag "$IMAGE_ID_BASE:$TAG_TS" ${IMAGE_ID_LATEST:+--tag "$IMAGE_ID_LATEST"}
+          - name: Push the Docker image
+            run: |
+              docker push "$IMAGE_ID_SHA"
+              docker push "$IMAGE_ID_TS"
+              if [ -n "$IMAGE_ID_LATEST" ]; then
+                docker push "$IMAGE_ID_LATEST"
+              fi
   build:
 
     runs-on: ubuntu-latest
