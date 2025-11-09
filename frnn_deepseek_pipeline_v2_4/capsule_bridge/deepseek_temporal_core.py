@@ -49,18 +49,34 @@ def _parse(js:Dict)->str:
 
 def deepseek_chat(msgs:List[Dict],context_prefix_str:str,model=None,api_key=None,api_url=None,
                   temperature=0.2,top_p=0.9,timeout_s=None,max_retries=3,extra=None)->str:
-    api_key=api_key or os.getenv("DEEPSEEK_API_KEY","");
-    if not api_key: raise RuntimeError("DEEPSEEK_API_KEY not set")
-    url=api_url or DEFAULT_URL; model=model or DEFAULT_MODEL; timeout_s=timeout_s or DEFAULT_TIMEOUT
+    api_key=api_key or os.getenv("DEEPSEEK_API_KEY","")
+    if not api_key:
+        raise RuntimeError("DEEPSEEK_API_KEY not set")
+    # Validate messages structure early
+    if not isinstance(msgs, list) or len(msgs) == 0:
+        raise ValueError("msgs must be a non-empty list")
+    for m in msgs:
+        if not isinstance(m, dict) or "role" not in m or "content" not in m:
+            raise ValueError("each message must be a dict with 'role' and 'content'")
+        if not isinstance(m["role"], str) or not isinstance(m["content"], str):
+            raise ValueError("'role' and 'content' must be strings")
+    url = api_url or DEFAULT_URL
+    model = model or DEFAULT_MODEL
+    timeout_s = timeout_s or DEFAULT_TIMEOUT
     messages=[{"role":"system","content":context_prefix_str}]+msgs
     head={"Authorization":f"Bearer {api_key}","Content-Type":"application/json"}
     body={"model":model,"messages":messages,"temperature":float(temperature),"top_p":float(top_p),"stream":False}
-    if extra: body.update(extra)
+    if extra:
+        body.update(extra)
     err=None
     for i in range(max_retries):
         try:
             r=requests.post(url,headers=head,json=body,timeout=timeout_s)
-            if r.status_code in (429,500,502,503,504): raise RuntimeError(f"DeepSeek HTTP {r.status_code}")
-            r.raise_for_status();return _parse(r.json())
-        except Exception as e: err=e; time.sleep(min(2**i,8))
+            if r.status_code in (429,500,502,503,504):
+                raise RuntimeError(f"DeepSeek HTTP {r.status_code}")
+            r.raise_for_status()
+            return _parse(r.json())
+        except Exception as e:
+            err=e
+            time.sleep(min(2**i,8))
     raise RuntimeError(f"DeepSeek failed after {max_retries}: {err}")
