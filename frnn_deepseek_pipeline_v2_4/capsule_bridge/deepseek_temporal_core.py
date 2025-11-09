@@ -24,11 +24,20 @@ def build_model(cfg=None)->FRNNPathB:
                      bank_scale=c["bank_scale"],use_gumbel=c["use_gumbel"],use_bank=c["use_bank"])
 
 def build_x_t(text:str,meta:Dict,di:int=128)->torch.Tensor:
-    v=np.zeros(di,np.float32);n=min(len(text),2048);v[0]=n/2048.0
-    v[1]=sum(c.isupper() for c in text)/max(1,len(text));v[2]=text.count("?")/max(1,len(text))
-    v[3]=text.count("!")/max(1,len(text));v[4]=text.count(".")/max(1,len(text));v[5]=text.count(",")/max(1,len(text))
-    v[64]=float(meta.get("latency_ms",0))/1000.0;v[65]=float(meta.get("tokens_last",0))/4096.0
-    v[66]=float(meta.get("success",1));v[67]=float(meta.get("errors",0));return torch.from_numpy(v)
+    v=np.zeros(di,np.float32)
+    n=min(len(text),2048)
+    if di>0: v[0]=n/2048.0
+    denom=max(1,len(text))
+    if di>1: v[1]=sum(c.isupper() for c in text)/denom
+    if di>2: v[2]=text.count("?")/denom
+    if di>3: v[3]=text.count("!")/denom
+    if di>4: v[4]=text.count(".")/denom
+    if di>5: v[5]=text.count(",")/denom
+    if di>64: v[64]=float(meta.get("latency_ms",0))/1000.0
+    if di>65: v[65]=float(meta.get("tokens_last",0))/4096.0
+    if di>66: v[66]=float(meta.get("success",1))
+    if di>67: v[67]=float(meta.get("errors",0))
+    return torch.from_numpy(v)
 
 def context_prefix(vec:torch.Tensor,modes:List[int])->str:
     v=vec.numpy();v=v/(np.linalg.norm(v)+1e-8);b=np.clip(np.round((v+1)*15).astype(int),0,30)
