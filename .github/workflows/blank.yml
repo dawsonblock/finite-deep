@@ -15,8 +15,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
   # Allows you to run this workflow manually from the Actions tab
-      # The type of runner that the job will run on
-      runs-on: ubuntu-22.04
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
