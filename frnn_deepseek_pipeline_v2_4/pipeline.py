@@ -1,5 +1,5 @@
 
-import os, json
+import os
 from capsule_bridge.deepseek_temporal_core import (
     build_model, TemporalCore, build_x_t, context_prefix, deepseek_chat, DEFAULT_CFG
 )
