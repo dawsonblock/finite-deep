@@ -13,7 +13,11 @@ def main():
     args=a.parse_args()
     if not os.getenv("DEEPSEEK_API_KEY"): print("error: DEEPSEEK_API_KEY not set",file=sys.stderr);sys.exit(2)
     frnn=build_model(DEFAULT_CFG); core=TemporalCore(frnn,device=args.device)
-    meta=json.loads(args.tool_json)
+    try:
+        meta=json.loads(args.tool_json)
+    except json.JSONDecodeError as e:
+        print(f"error: Invalid JSON in --tool-json: {e}", file=sys.stderr)
+        sys.exit(1)
     for i in range(args.steps):
         x=build_x_t(f"tick {i}: {args.prompt}",meta,di=DEFAULT_CFG["Di"]); vec,m=core.tick(x)
     pref=context_prefix(vec,m); msgs=[{"role":"user","content":args.prompt}]
