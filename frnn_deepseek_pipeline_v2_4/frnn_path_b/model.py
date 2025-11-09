@@ -13,8 +13,8 @@ class RMSNorm(nn.Module):
 
 class FRNNPathB(nn.Module):
     __version__="0.2.4"
-    def __init__(self,input_dim,output_dim,num_states,memory_dim,hidden_dim,bank_size,
-                 use_gumbel=False,tau=1.0,stickiness=0.1,ema_decay=0.99,bank_scale=4.0,use_bank=True):
+    def __init__(self, input_dim, output_dim, num_states, memory_dim, hidden_dim, bank_size,
+                 use_gumbel=False, tau=1.0, stickiness=0.1, ema_decay=0.99, bank_scale=4.0, use_bank=True):
         super().__init__()
         self.input_dim=input_dim;self.output_dim=output_dim
         self.K=num_states;self.Dm=memory_dim;self.H=hidden_dim;self.bank_size=bank_size
