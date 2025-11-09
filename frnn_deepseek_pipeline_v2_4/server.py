@@ -62,12 +62,14 @@ def healthz():
 
 @app.post("/tick")
 def tick(inp: TickIn):
+    _ensure_core()
     x_t = build_x_t(inp.text, inp.meta, di=DEFAULT_CFG["Di"])
     ctx_vec, top_modes = core.tick(x_t)
     return {"ok": True, "top_modes": top_modes, "ctx_len": int(ctx_vec.numel())}
 
 @app.post("/chat")
 def chat(inp: ChatIn):
+    _ensure_core()
     if not inp.messages:
         raise HTTPException(status_code=400, detail="messages list cannot be empty")
     x_t = build_x_t(inp.messages[-1]["content"], {"latency_ms":0,"tokens_last":0}, di=DEFAULT_CFG["Di"])
